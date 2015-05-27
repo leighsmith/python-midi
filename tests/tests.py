@@ -24,5 +24,10 @@ class TestMIDI(unittest.TestCase):
                 self.assertEqual(event1.tick, event2.tick)
                 self.assertEqual(event1.data, event2.data)
 
+    def test_keys(self):
+        k = midi.KeySignatureEvent(key=7, mode="major")
+        assert k.signs == 1
+        assert k.mode == "major"
+
 if __name__ == '__main__':
     unittest.main()

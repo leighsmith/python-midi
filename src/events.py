@@ -345,23 +345,59 @@ class TimeSignatureEvent(MetaEvent):
     thirtyseconds = property(get_thirtyseconds, set_thirtyseconds)
 
 class KeySignatureEvent(MetaEvent):
-    __slots__ = ['alternatives', 'minor']
+    __slots__ = ['signs', 'mode', 'key']
     name = 'Key Signature'
     metacommand = 0x59
     length = 2
 
-    def get_alternatives(self):
-        d = self.data[0]
-        return d - 256 if d > 127 else d
-    def set_alternatives(self, val):
-        self.data[0] = 256 + val if val < 0 else val
-    alternatives = property(get_alternatives, set_alternatives)
+    def get_signs(self):
+        return self._signed_byte(self.data[0])
+    def set_signs(self, s):
+        assert -7 <= s <= 7
+        self.data[0] = 256 + s if s < 0 else s
+    signs = property(get_signs, set_signs)
 
-    def get_minor(self):
-        return self.data[1]
-    def set_minor(self, val):
-        self.data[1] = val
-    minor = property(get_minor, set_minor)
+    def get_mode(self):
+        return "minor" if self.data[1] == 1 else "major"
+    def set_mode(self, m):
+        self.data[1] = 1 if m == "minor" else 0
+    mode = property(get_mode, set_mode)
+
+    def get_key(self):
+        """ Returns the key in semitones. 0 = C, 1 = C#, ... """
+        # positive number: number of sharps
+        # negative number: number of flats
+        midikey = self.signs
+        # for each sharp, we jump up a quint to the next key.
+        # for each flat, we jump up a quart to the next key.
+        key = (midikey * 7) % 12 if midikey >= 0 else (abs(midikey)*5) % 12
+        return key
+    def set_key(self, key):
+        key %= 12
+
+        flats = 0
+        k = key
+        while k > 0:
+            k -= 5
+            flats += 1
+            while k < 0:
+                k += 12
+
+        sharps = 0
+        k = key
+        while k > 0:
+            k -= 7
+            sharps += 1
+            while k < 0:
+                k += 12
+
+        self.signs = sharps if sharps <= 7 else -flats
+    key = property(get_key, set_key)
+
+    def is_major(self):
+        # second byte: 0 if major, 1 if minor
+        isMinor = bool(self.data[1])
+        return not isMinor
 
 class SequencerSpecificEvent(MetaEvent):
     name = 'Sequencer Specific'

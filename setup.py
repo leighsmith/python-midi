@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 
 __base__ = {
     'name':'midi', 
-    'version':'v0.2.3',
+    'version':'0.2.5',
     'description':'Python MIDI API',
     'author':'giles hall',
     'author_email':'ghall@csh.rit.edu',
@@ -42,6 +42,7 @@ def configure_platform():
     return ns
 
 if __name__ == "__main__":
-    setup(**configure_platform())
+    #setup(**configure_platform())
+    setup(**__base__)
 
 
